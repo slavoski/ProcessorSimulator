@@ -6,7 +6,7 @@
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:vm="clr-namespace:ProcessorSimulator.VM"
 		mc:Ignorable="d"
-		Title="Simulator" Height="800" Width="1000"
+		Title="Simulator" Height="800" Width="1200"
 		TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.FontWeight="Medium"
@@ -31,33 +31,52 @@
 			<Button ToolTip="Open File" Content="{materialDesign:PackIcon Kind=FolderOpen}" Command="{Binding OpenCommand}" />
 			<Button ToolTip="Save File" Content="{materialDesign:PackIcon Kind=ContentSave}" Command="{Binding SaveCommand}" IsEnabled="{Binding IsFileLoaded}" />
 			<Separator />
-			<Button ToolTip="Run" Content="{materialDesign:PackIcon Kind=Play}" IsEnabled="{Binding IsFileLoaded}" Command="{Binding RunCommand}" />
-			<Button ToolTip="Run One" Content="{materialDesign:PackIcon Kind=PlayBox}" IsEnabled="{Binding IsFileLoaded}" Command="{Binding RunOneCommand}" />
+			<Button ToolTip="Parse" Content="{materialDesign:PackIcon Kind=Gear}" IsEnabled="{Binding IsFileLoaded}" Command="{Binding ParseCommands}" />
+			<Button ToolTip="Run" Content="{materialDesign:PackIcon Kind=Play}" IsEnabled="{Binding IsFileParsed}" Command="{Binding RunCommand}" />
+			<Button ToolTip="Run One" Content="{materialDesign:PackIcon Kind=PlayBox}" IsEnabled="{Binding IsFileParsed}" Command="{Binding RunOneCommand}" />
 			<Separator />
 		</ToolBar>
 
-		<TabControl  Grid.Row="1" Style="{StaticResource MaterialDesignFilledTabControl}">
+		<TabControl Grid.Row="1" Style="{StaticResource MaterialDesignFilledTabControl}" SelectedIndex="{Binding TabIndex}">
 			<TabItem Header="Control File">
 				<GroupBox Margin="10" Header="{Binding FileName}" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
 					<TextBox Grid.Row="1" Text="{Binding MainFile, UpdateSourceTrigger=PropertyChanged}" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" IsEnabled="{Binding IsFileLoaded}" />
 				</GroupBox>
 			</TabItem>
 			<TabItem Header="Call Stack">
-				<ListView>
-				</ListView>
+				<DataGrid ItemsSource="{Binding AllOperations}" SelectedIndex="{Binding CommandIndex}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
+						<DataGridTextColumn Header="Basic Command" Binding="{Binding CodeLine}" IsReadOnly="True" MinWidth="80" />
+						<DataGridTextColumn Header="Original Command" Binding="{Binding OriginalCommand}" IsReadOnly="True" MinWidth="80" />
+					</DataGrid.Columns>
+
+					<DataGrid.CellStyle>
+						<Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+							<Setter Property="BorderThickness" Value="0" />
+						</Style>
+					</DataGrid.CellStyle>
+				</DataGrid>
 			</TabItem>
 		</TabControl>
 
 		<GroupBox Grid.Row="1" Grid.Column="2" Header="Registers" Margin="10">
-			<DataGrid ItemsSource="{Binding Registers}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
+			<DataGrid SelectedIndex="{Binding RegisterIndex}" ItemsSource="{Binding Registers}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" MinWidth="80" />
-					<DataGridTextColumn Header="Number" Binding="{Binding Number}" IsReadOnly="True" MinWidth="60" />
+					<DataGridTextColumn Header="Number" Binding="{Binding Number}" IsReadOnly="True" MinWidth="60">
+						<DataGridTextColumn.ElementStyle>
+							<Style TargetType="TextBlock">
+								<Setter Property="Visibility" Value="{Binding ShowDecimalValue}" />
+							</Style>
+						</DataGridTextColumn.ElementStyle>
+					</DataGridTextColumn>
 					<DataGridTextColumn Header="Hex Value" Binding="{Binding Value, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
-					<DataGridTextColumn Header="Decimal Value" Binding="{Binding Value}" IsReadOnly="True" MinWidth="80">
+					<DataGridTextColumn Header="Decimal Value" Binding="{Binding Value}"  IsReadOnly="True" MinWidth="80">
 						<DataGridTextColumn.ElementStyle>
 							<Style TargetType="TextBlock">
 								<Setter Property="HorizontalAlignment" Value="Right" />
+								<Setter Property="Visibility" Value="{Binding ShowDecimalValue}" />
 							</Style>
 						</DataGridTextColumn.ElementStyle>
 					</DataGridTextColumn>

@@ -8,11 +8,17 @@ namespace ProcessorSimulator
 	{
 		#region Properties
 
-		private ObservableRangeCollection<Register> Registers
+		public ObservableRangeCollection<Operation> AllOperations
 		{
 			get;
 			set;
 		}
+
+		public int CurrentLine
+		{
+			get;
+			set;
+		} = 0;
 
 		public SnackbarMessageQueue SnackBoxMessage
 		{
@@ -20,13 +26,20 @@ namespace ProcessorSimulator
 			set;
 		} = new SnackbarMessageQueue();
 
+		private ObservableRangeCollection<Register> Registers
+		{
+			get;
+			set;
+		}
+
 		#endregion Properties
 
 		#region constructor / destructor
 
-		public ProcessCommands(ObservableRangeCollection<Register> registers)
+		public ProcessCommands(ObservableRangeCollection<Register> registers, ObservableRangeCollection<Operation> operations)
 		{
 			Registers = registers;
+			AllOperations = operations;
 		}
 
 		#endregion constructor / destructor
@@ -35,24 +48,26 @@ namespace ProcessorSimulator
 
 		public bool BuildCommand(string textCommand)
 		{
+			CurrentLine++;
+
 			var breakOnSpaces = textCommand.Split(" ");
 			bool successful = true;
 
 			if (breakOnSpaces.Length >= 5)
 			{
-				successful = BuildFiveParameterCommand(breakOnSpaces);
+				successful = BuildFiveParameterCommand(breakOnSpaces, textCommand);
 			}
 			else if (breakOnSpaces.Length == 4)
 			{
-				successful = BuildFourParameterCommand(breakOnSpaces);
+				successful = BuildFourParameterCommand(breakOnSpaces, textCommand);
 			}
 			else if (breakOnSpaces.Length == 3)
 			{
-				successful = BuildThreeParameterCommand(breakOnSpaces);
+				successful = BuildThreeParameterCommand(breakOnSpaces, textCommand);
 			}
 			else if (breakOnSpaces.Length == 2)
 			{
-				successful = BuildTwoParameterCommand(breakOnSpaces);
+				successful = BuildTwoParameterCommand(breakOnSpaces, textCommand);
 			}
 			else
 			{
@@ -63,18 +78,19 @@ namespace ProcessorSimulator
 			return successful;
 		}
 
-		private bool BuildFiveParameterCommand(string[] commandParameters)
+		private bool BuildFiveParameterCommand(string[] commandParameters, string textCommand)
 		{
 			return true;
 		}
 
-		private bool BuildFourParameterCommand(string[] commandParameters)
+		private bool BuildFourParameterCommand(string[] commandParameters, string textCommand)
 		{
 			bool successful = true;
 			var function = commandParameters[0];
 			var parameter1 = commandParameters[1];
 			var parameter2 = commandParameters[2];
 			var parameter3 = commandParameters[3];
+			var pcRegister = Registers[(int)RegisterEnums.pc];
 
 			switch (function)
 			{
@@ -84,7 +100,14 @@ namespace ProcessorSimulator
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
 
-						register3.Value = register1.Value + register2.Value;
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"add ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							Result = register1.Value + register2.Value,
+							ResultingRegister = register3.EnumID
+						});
 					}
 					break;
 
@@ -95,23 +118,34 @@ namespace ProcessorSimulator
 					}
 					break;
 			}
+
+			pcRegister.IncrementPC();
+
 			return successful;
 		}
 
-		private bool BuildThreeParameterCommand(string[] commandParameters)
+		private bool BuildThreeParameterCommand(string[] commandParameters, string textCommand)
 		{
 			bool successful = true;
 			var function = commandParameters[0];
 			var parameter1 = commandParameters[1];
 			var parameter2 = commandParameters[2];
+			var pcRegister = Registers[(int)RegisterEnums.pc];
 
 			switch (function)
 			{
 				case "loadImmediate":
 					{
 						var register1 = GetRegister(parameter1);
-
 						register1.Value = int.Parse(parameter2);
+						AllOperations.Add(new Operation()
+						{
+							Address = Registers[(int)RegisterEnums.pc].Value,
+							CodeLine = $"loadImmediate ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							Result = int.Parse(parameter2),
+							ResultingRegister = register1.EnumID
+						});
 					}
 					break;
 
@@ -122,10 +156,13 @@ namespace ProcessorSimulator
 					}
 					break;
 			}
+
+			pcRegister.IncrementPC();
+
 			return successful;
 		}
 
-		private bool BuildTwoParameterCommand(string[] commandParameters)
+		private bool BuildTwoParameterCommand(string[] commandParameters, string textCommand)
 		{
 			return true;
 		}
