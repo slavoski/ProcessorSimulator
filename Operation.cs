@@ -10,13 +10,13 @@
 			set;
 		}
 
-		public string Code
+		public string CodeLine
 		{
 			get;
 			set;
 		}
 
-		public string CodeLine
+		public int OpCode
 		{
 			get;
 			set;
