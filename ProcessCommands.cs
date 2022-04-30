@@ -128,6 +128,40 @@ namespace ProcessorSimulator
 					}
 					break;
 
+				case "multiply":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"multiply ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							Result = register1.Value * register2.Value,
+							ResultingRegister = register3.EnumID
+						});
+					}
+					break;
+
+				case "divide":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"divide ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							Result = register1.Value / register2.Value,
+							ResultingRegister = register3.EnumID
+						});
+					}
+					break;
+
 				default:
 					{
 						SnackBoxMessage.Enqueue($"Command ' {function} ' does not exist , Exiting Run");
