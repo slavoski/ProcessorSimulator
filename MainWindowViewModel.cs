@@ -94,22 +94,6 @@ namespace ProcessorSimulator.VM
 			}
 		}
 
-		public ObservableRangeCollection<Int32> Memory
-		{
-			get;
-			private set;
-		} = new ObservableRangeCollection<Int32>(new int[196608]);
-
-		public int MemoryIndex
-		{
-			get => _memoryIndex;
-			set
-			{
-				_memoryIndex = value;
-				OnPropertyChanged(nameof(MemoryIndex));
-			}
-		}
-
 		public ProcessCommands ProcessCommands
 		{
 			get;

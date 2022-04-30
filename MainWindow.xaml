@@ -64,21 +64,6 @@
 							</Style>
 						</DataGrid.CellStyle>
 					</DataGrid>
-					<!--<DataGrid Grid.Row="1" ItemsSource="{Binding Memory}" SelectedIndex="{Binding MemoryIndex}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="Cell">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="Address"    Binding="{Binding AddressIndex}" IsReadOnly="True" MinWidth="80" />
-							-->
-					<!--<DataGridTextColumn Header="Value(+0)"  Binding="{Binding Memory[MemoryIndex+0], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+4)"  Binding="{Binding Memory[MemoryIndex+4], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+8)"  Binding="{Binding Memory[MemoryIndex+8], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+12)" Binding="{Binding Memory[MemoryIndex+12], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+16)" Binding="{Binding Memory[MemoryIndex+16], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+20)" Binding="{Binding Memory[MemoryIndex+20], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+24)" Binding="{Binding Memory[MemoryIndex+24], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />
-							<DataGridTextColumn Header="Value(+28)" Binding="{Binding Memory[MemoryIndex+28], StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="60" />-->
-					<!--
-						</DataGrid.Columns>
-					</DataGrid>-->
 				</Grid>
 			</TabItem>
 		</TabControl>
