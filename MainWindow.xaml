@@ -6,7 +6,7 @@
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:vm="clr-namespace:ProcessorSimulator.VM"
 		mc:Ignorable="d"
-		Title="Simulator" Height="800" Width="1200"
+		Title="Simulator" Height="800" Width="1300"
 		TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.FontWeight="Medium"
@@ -28,6 +28,7 @@
 		</Grid.ColumnDefinitions>
 
 		<ToolBar Grid.Row="0" Grid.ColumnSpan="2">
+			<Button ToolTip="New File" Content="{materialDesign:PackIcon Kind=FileDocumentPlus}" Command="{Binding CreateNewFileCommand}" />
 			<Button ToolTip="Open File" Content="{materialDesign:PackIcon Kind=FolderOpen}" Command="{Binding OpenCommand}" />
 			<Button ToolTip="Save File" Content="{materialDesign:PackIcon Kind=ContentSave}" Command="{Binding SaveCommand}" IsEnabled="{Binding IsFileLoaded}" />
 			<Separator />
@@ -44,19 +45,26 @@
 				</GroupBox>
 			</TabItem>
 			<TabItem Header="Call Stack">
-				<DataGrid ItemsSource="{Binding AllOperations}" SelectedIndex="{Binding CommandIndex}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
-					<DataGrid.Columns>
-						<DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
-						<DataGridTextColumn Header="Basic Command" Binding="{Binding CodeLine}" IsReadOnly="True" MinWidth="80" />
-						<DataGridTextColumn Header="Original Command" Binding="{Binding OriginalCommand}" IsReadOnly="True" MinWidth="80" />
-					</DataGrid.Columns>
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition />
+						<RowDefinition />
+					</Grid.RowDefinitions>
+					<DataGrid ItemsSource="{Binding AllOperations}" SelectedIndex="{Binding CommandIndex}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
+							<DataGridTextColumn Header="Op Code" Binding="{Binding OpCode, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
+							<DataGridTextColumn Header="Basic Command" Binding="{Binding CodeLine}" IsReadOnly="True" MinWidth="80" />
+							<DataGridTextColumn Header="Original Command" Binding="{Binding OriginalCommand}" IsReadOnly="True" MinWidth="80" />
+						</DataGrid.Columns>
 
-					<DataGrid.CellStyle>
-						<Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
-							<Setter Property="BorderThickness" Value="0" />
-						</Style>
-					</DataGrid.CellStyle>
-				</DataGrid>
+						<DataGrid.CellStyle>
+							<Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+								<Setter Property="BorderThickness" Value="0" />
+							</Style>
+						</DataGrid.CellStyle>
+					</DataGrid>
+				</Grid>
 			</TabItem>
 		</TabControl>
 

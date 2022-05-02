@@ -12,19 +12,31 @@ namespace ProcessorSimulator.VM
 	{
 		#region member variables
 
+		private int _addressIndex = 0;
 		private int _commandIndex = -1;
 		private int _currentOperation = 0;
 		private string _fileName = "";
-		private string _fullFilePath = "";
 		private bool _isFileLoaded;
 		private bool _isFileParsed;
 		private string _mainFile = "Load File to Edit";
+		private int _memoryIndex = 0;
 		private int _registerIndex = -1;
 		private int _tabIndex = 0;
+		private string m_fullFilePath = "";
 
 		#endregion member variables
 
 		#region properties
+
+		public int AddressIndex
+		{
+			get => _addressIndex;
+			set
+			{
+				_addressIndex = value;
+				OnPropertyChanged(nameof(AddressIndex));
+			}
+		}
 
 		public ObservableRangeCollection<Operation> AllOperations
 		{
@@ -124,6 +136,12 @@ namespace ProcessorSimulator.VM
 
 		#region Commands
 
+		public Command CreateNewFileCommand
+		{
+			get;
+			set;
+		}
+
 		public Command OpenCommand
 		{
 			get;
@@ -162,7 +180,6 @@ namespace ProcessorSimulator.VM
 		{
 			InitializeCommands();
 			InitializeRegisters();
-			ProcessCommands = new ProcessCommands(Registers, AllOperations) { SnackBoxMessage = SnackBoxMessage };
 		}
 
 		#endregion constructor / destructor
@@ -182,6 +199,24 @@ namespace ProcessorSimulator.VM
 			CommandIndex = -1;
 		}
 
+		private void CreateNewFile()
+		{
+			SaveFileDialog sfd = new SaveFileDialog()
+			{
+				DefaultExt = ".sjw",
+				FileName = "ShouldJustWork",
+				Filter = "Simulator Just Works Files (.sjw)|*.sjw",
+				OverwritePrompt = true,
+				Title = "Save Glorious File"
+			};
+
+			if (sfd.ShowDialog() == true)
+			{
+				File.WriteAllText(sfd.FileName, "");
+				OpenFileWithPath(sfd.FileName, sfd.SafeFileName);
+			}
+		}
+
 		private void InitializeCommands()
 		{
 			OpenCommand = new Command(() => OpenFile());
@@ -189,6 +224,8 @@ namespace ProcessorSimulator.VM
 			RunCommand = new Command(() => RunCode());
 			RunOneCommand = new Command(() => RunCodeOneStep());
 			ParseCommands = new Command(() => ParseAllCommands());
+			ProcessCommands = new ProcessCommands(Registers, AllOperations) { SnackBoxMessage = SnackBoxMessage };
+			CreateNewFileCommand = new Command(() => CreateNewFile());
 		}
 
 		private void InitializeRegisters()
@@ -244,16 +281,20 @@ namespace ProcessorSimulator.VM
 
 			if (openFileDialog.ShowDialog() == true)
 			{
-				_fullFilePath = openFileDialog.FileName;
-				FileName = openFileDialog.SafeFileName;
-
-				StreamReader streamReader = new StreamReader(_fullFilePath);
-				MainFile = streamReader.ReadToEnd();
-				IsFileLoaded = true;
-				streamReader.Close();
-				Clear();
-				IsFileParsed = false;
+				OpenFileWithPath(openFileDialog.FileName, openFileDialog.SafeFileName);
 			}
+		}
+
+		private void OpenFileWithPath(string _fullFilePathName, string _fileName)
+		{
+			m_fullFilePath = _fullFilePathName;
+			FileName = _fileName;
+			StreamReader streamReader = new StreamReader(m_fullFilePath);
+			MainFile = streamReader.ReadToEnd();
+			IsFileLoaded = true;
+			streamReader.Close();
+			Clear();
+			IsFileParsed = false;
 		}
 
 		private void ParseAllCommands()
@@ -263,7 +304,6 @@ namespace ProcessorSimulator.VM
 			ParseText();
 			IsFileParsed = true;
 			TabIndex = 1;
-			
 		}
 
 		private void ParseText()
@@ -278,6 +318,10 @@ namespace ProcessorSimulator.VM
 				}
 			}
 			Registers[(int)RegisterEnums.pc].ResetPC();
+			foreach (var register in Registers)
+			{
+				register.ClearValues();
+			}
 		}
 
 		private void RunCode()
@@ -305,7 +349,7 @@ namespace ProcessorSimulator.VM
 
 		private void SaveFile()
 		{
-			File.WriteAllText(_fullFilePath, MainFile);
+			File.WriteAllText(m_fullFilePath, MainFile);
 		}
 
 		#endregion methods

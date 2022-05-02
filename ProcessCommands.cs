@@ -48,33 +48,40 @@ namespace ProcessorSimulator
 
 		public bool BuildCommand(string textCommand)
 		{
-			CurrentLine++;
-
-			var breakOnSpaces = textCommand.Split(" ");
 			bool successful = true;
+			try
+			{
+				CurrentLine++;
 
-			if (breakOnSpaces.Length >= 5)
-			{
-				successful = BuildFiveParameterCommand(breakOnSpaces, textCommand);
+				var breakOnSpaces = textCommand.Split(" ");
+
+				if (breakOnSpaces.Length >= 5)
+				{
+					successful = BuildFiveParameterCommand(breakOnSpaces, textCommand);
+				}
+				else if (breakOnSpaces.Length == 4)
+				{
+					successful = BuildFourParameterCommand(breakOnSpaces, textCommand);
+				}
+				else if (breakOnSpaces.Length == 3)
+				{
+					successful = BuildThreeParameterCommand(breakOnSpaces, textCommand);
+				}
+				else if (breakOnSpaces.Length == 2)
+				{
+					successful = BuildTwoParameterCommand(breakOnSpaces, textCommand);
+				}
+				else
+				{
+					SnackBoxMessage.Enqueue($"Command ' {breakOnSpaces[0]} ' does not have enough parameters, Exiting Run");
+					successful = false;
+				}
 			}
-			else if (breakOnSpaces.Length == 4)
+			catch
 			{
-				successful = BuildFourParameterCommand(breakOnSpaces, textCommand);
-			}
-			else if (breakOnSpaces.Length == 3)
-			{
-				successful = BuildThreeParameterCommand(breakOnSpaces, textCommand);
-			}
-			else if (breakOnSpaces.Length == 2)
-			{
-				successful = BuildTwoParameterCommand(breakOnSpaces, textCommand);
-			}
-			else
-			{
-				SnackBoxMessage.Enqueue($"Command ' {breakOnSpaces[0]} ' does not have enough parameters, Exiting Run");
+				SnackBoxMessage.Enqueue($"Bad Parsing: Please Check the Following Line: {CurrentLine}:{textCommand}");
 				successful = false;
 			}
-
 			return successful;
 		}
 
@@ -83,7 +90,7 @@ namespace ProcessorSimulator
 			return true;
 		}
 
-		private bool BuildFourParameterCommand(string[] commandParameters, string textCommand)
+		private bool BuildFourParameterCommand(string[] commandParameters, string textCommand, bool writeOriginalCommand = true)
 		{
 			bool successful = true;
 			var function = commandParameters[0];
@@ -95,10 +102,23 @@ namespace ProcessorSimulator
 			switch (function)
 			{
 				case "add":
+				case "addi":
 					{
 						var register1 = GetRegister(parameter1);
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
 
 						AllOperations.Add(new Operation()
 						{
@@ -175,7 +195,7 @@ namespace ProcessorSimulator
 			return successful;
 		}
 
-		private bool BuildThreeParameterCommand(string[] commandParameters, string textCommand)
+		private bool BuildThreeParameterCommand(string[] commandParameters, string textCommand, bool writeOriginalCommand = true)
 		{
 			bool successful = true;
 			var function = commandParameters[0];
@@ -193,7 +213,7 @@ namespace ProcessorSimulator
 						{
 							Address = Registers[(int)RegisterEnums.pc].Value,
 							CodeLine = $"loadImmediate ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
-							OriginalCommand = CurrentLine + ": " + textCommand,
+							OriginalCommand = writeOriginalCommand ? CurrentLine + ": " + textCommand : "",
 							Result = int.Parse(parameter2),
 							ResultingRegister = register1.EnumID
 						});
@@ -222,7 +242,7 @@ namespace ProcessorSimulator
 		{
 			var register = Registers.Where(p => string.Compare(p.Name, registerName) == 0).FirstOrDefault();
 
-			if (register == null)
+			if (register == null && registerName[0] == '$')
 			{
 				SnackBoxMessage.Enqueue($"Register Name ' {registerName} ' does not exist , Exiting Run");
 			}
