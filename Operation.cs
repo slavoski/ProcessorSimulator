@@ -1,4 +1,6 @@
-﻿namespace ProcessorSimulator
+﻿using System;
+
+namespace ProcessorSimulator
 {
 	public class Operation
 	{
@@ -22,6 +24,18 @@
 			set;
 		}
 
+		public Action CodeToRun
+		{
+			get;
+			set;
+		}
+
+		public Register DestinationRegister
+		{
+			get;
+			set;
+		}
+
 		public bool DoesBranchExistYet
 		{
 			get;
@@ -34,7 +48,7 @@
 			set;
 		}
 
-		public long OpCode
+		public uint OpCode
 		{
 			get;
 			set;
@@ -53,12 +67,6 @@
 		}
 
 		public int Result
-		{
-			get;
-			set;
-		}
-
-		public RegisterEnums ResultingRegister
 		{
 			get;
 			set;

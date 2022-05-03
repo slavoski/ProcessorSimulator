@@ -106,7 +106,7 @@ namespace ProcessorSimulator
 
 				if (branch != null)
 				{
-					var opCode = 4294967040 + branch.OperationGoToIndex;
+					var opCode = 4294967040 + (uint)branch.OperationGoToIndex;
 
 					operation.OpCode = opCode;
 					operation.CodeLine = $"branch 0x{opCode:X8}";
@@ -166,8 +166,8 @@ namespace ProcessorSimulator
 							Address = pcRegister.Value,
 							CodeLine = $"add ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
-							Result = register1.Value + register2.Value,
-							ResultingRegister = register3.EnumID
+							CodeToRun = () => { register3.Value = register2.Value + register1.Value; },
+							DestinationRegister = register3
 						});
 					}
 					break;
@@ -183,8 +183,8 @@ namespace ProcessorSimulator
 							Address = pcRegister.Value,
 							CodeLine = $"subtract ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
-							Result = register1.Value - register2.Value,
-							ResultingRegister = register3.EnumID
+							DestinationRegister = register3,
+							CodeToRun = () => { register3.Value = register1.Value - register2.Value; },
 						});
 					}
 					break;
@@ -195,13 +195,26 @@ namespace ProcessorSimulator
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
 
+						var loRegister = GetRegister("$lo");
+						var hiRegister = GetRegister("$hi");
+
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
 							CodeLine = $"multiply ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
-							Result = register1.Value * register2.Value,
-							ResultingRegister = register3.EnumID
+							DestinationRegister = register3,
+							CodeToRun = () =>
+							{
+								long result = (long)register1.Value * (long)register2.Value;
+								var lo = (uint)result;
+								int hi = (int)(result >> 32);
+
+								loRegister.Value = (int)lo;
+								hiRegister.Value = hi;
+
+								register3.Value = (int)lo;
+							}
 						});
 					}
 					break;
@@ -211,6 +224,8 @@ namespace ProcessorSimulator
 						var register1 = GetRegister(parameter1);
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
+						var loRegister = GetRegister("$lo");
+						var hiRegister = GetRegister("$hi");
 
 						AllOperations.Add(new Operation()
 						{
@@ -218,7 +233,18 @@ namespace ProcessorSimulator
 							CodeLine = $"divide ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							Result = register1.Value / register2.Value,
-							ResultingRegister = register3.EnumID
+							DestinationRegister = register3,
+							CodeToRun = () =>
+							{
+								long result = (long)register1.Value / (long)register2.Value;
+								var lo = (uint)result;
+								int hi = (int)(result >> 32);
+
+								loRegister.Value = (int)lo;
+								hiRegister.Value = hi;
+
+								register3.Value = (int)lo;
+							}
 						});
 					}
 					break;
@@ -268,8 +294,8 @@ namespace ProcessorSimulator
 							Address = pcRegister.Value,
 							CodeLine = $"loadImmediate ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
 							OriginalCommand = writeOriginalCommand ? CurrentLine + ": " + textCommand : "",
-							Result = int.Parse(parameter2),
-							ResultingRegister = register1.EnumID
+							DestinationRegister = register1,
+							CodeToRun = () => { register1.Value = int.Parse(parameter2); }
 						});
 					}
 					break;
@@ -302,9 +328,9 @@ namespace ProcessorSimulator
 
 						if (branch != null)
 						{
-							//var offset = AllOperations[branch.OperationGoToIndex].OpCode - pcRegister;
+							//var offset = AllOperations[branch.OperationGoToIndex].OpCode - branch;
 
-							var opCode = 67239935 + branch.OperationGoToIndex;
+							var opCode = 67239935 + (uint)branch.OperationGoToIndex;
 
 							AllOperations.Add(new Operation()
 							{
