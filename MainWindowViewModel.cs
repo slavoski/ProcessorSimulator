@@ -19,7 +19,6 @@ namespace ProcessorSimulator.VM
 		private bool _isFileLoaded;
 		private bool _isFileParsed;
 		private string _mainFile = "Load File to Edit";
-		private int _memoryIndex = 0;
 		private int _registerIndex = -1;
 		private int _tabIndex = 0;
 		private string m_fullFilePath = "";
@@ -178,8 +177,8 @@ namespace ProcessorSimulator.VM
 
 		public MainWindowViewModel()
 		{
-			InitializeCommands();
 			InitializeRegisters();
+			InitializeCommands();
 		}
 
 		#endregion constructor / destructor
@@ -189,6 +188,7 @@ namespace ProcessorSimulator.VM
 		private void Clear()
 		{
 			AllOperations.Clear();
+			ProcessCommands.Clear();
 			Registers[(int)RegisterEnums.pc].ResetPC();
 			foreach (var register in Registers)
 			{
@@ -317,6 +317,9 @@ namespace ProcessorSimulator.VM
 					break;
 				}
 			}
+
+			ProcessCommands.GoThroughBranchesThatDidNotExist();
+
 			Registers[(int)RegisterEnums.pc].ResetPC();
 			foreach (var register in Registers)
 			{
@@ -339,11 +342,22 @@ namespace ProcessorSimulator.VM
 			{
 				var command = AllOperations[_currentOperation];
 				var register = Registers[(int)command.ResultingRegister];
-				register.Value = command.Result;
-				Registers[(int)RegisterEnums.pc].Value = command.Address;
-				RegisterIndex = register.Number;
-				CommandIndex = _currentOperation;
-				++_currentOperation;
+
+				if (command.IsBranch)
+				{
+					Registers[(int)RegisterEnums.pc].Value = AllOperations[command.OpCodeToGoTo].Address;
+					RegisterIndex = -1;
+					CommandIndex = _currentOperation;
+					_currentOperation = command.OpCodeToGoTo;
+				}
+				else
+				{
+					register.Value = command.Result;
+					Registers[(int)RegisterEnums.pc].Value = command.Address;
+					RegisterIndex = register.Number;
+					CommandIndex = _currentOperation;
+					++_currentOperation;
+				}
 			}
 		}
 

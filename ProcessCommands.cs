@@ -1,5 +1,6 @@
 ﻿using MaterialDesignThemes.Wpf;
 using MvvmHelpers;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ProcessorSimulator
@@ -25,6 +26,12 @@ namespace ProcessorSimulator
 			get;
 			set;
 		} = new SnackbarMessageQueue();
+
+		private List<BranchInfo> Branches
+		{
+			get;
+			set;
+		} = new List<BranchInfo>();
 
 		private ObservableRangeCollection<Register> Registers
 		{
@@ -71,6 +78,10 @@ namespace ProcessorSimulator
 				{
 					successful = BuildTwoParameterCommand(breakOnSpaces, textCommand);
 				}
+				else if (breakOnSpaces.Length == 1)
+				{
+					successful = BuildOneParameterCommand(breakOnSpaces, textCommand);
+				}
 				else
 				{
 					SnackBoxMessage.Enqueue($"Command ' {breakOnSpaces[0]} ' does not have enough parameters, Exiting Run");
@@ -83,6 +94,36 @@ namespace ProcessorSimulator
 				successful = false;
 			}
 			return successful;
+		}
+
+		public void GoThroughBranchesThatDidNotExist()
+		{
+			var branchesToFind = AllOperations.Where(p => p.IsBranch && !p.DoesBranchExistYet).ToList();
+
+			foreach (var operation in branchesToFind)
+			{
+				var branch = Branches.Where(p => string.Equals(p.Name, operation.BranchName)).FirstOrDefault();
+
+				if (branch != null)
+				{
+					var opCode = 4294967040 + branch.OperationGoToIndex;
+
+					operation.OpCode = opCode;
+					operation.CodeLine = $"branch 0x{opCode:X8}";
+					operation.OpCodeToGoTo = branch.OperationGoToIndex;
+					operation.DoesBranchExistYet = true;
+				}
+				else
+				{
+					SnackBoxMessage.Enqueue($"Branch ' {operation.BranchName} ' does not exist , Exiting Run");
+					break;
+				}
+			}
+		}
+
+		internal void Clear()
+		{
+			Branches.Clear();
 		}
 
 		private bool BuildFiveParameterCommand(string[] commandParameters, string textCommand)
@@ -195,6 +236,19 @@ namespace ProcessorSimulator
 			return successful;
 		}
 
+		private bool BuildOneParameterCommand(string[] commandParameters, string textCommand)
+		{
+			bool successful = true;
+			var function = commandParameters[0];
+
+			if (function.EndsWith(";"))
+			{
+				Branches.Add(new BranchInfo() { Name = function[0..^1], OperationGoToIndex = AllOperations.Count });
+			}
+
+			return successful;
+		}
+
 		private bool BuildThreeParameterCommand(string[] commandParameters, string textCommand, bool writeOriginalCommand = true)
 		{
 			bool successful = true;
@@ -211,7 +265,7 @@ namespace ProcessorSimulator
 						register1.Value = int.Parse(parameter2);
 						AllOperations.Add(new Operation()
 						{
-							Address = Registers[(int)RegisterEnums.pc].Value,
+							Address = pcRegister.Value,
 							CodeLine = $"loadImmediate ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
 							OriginalCommand = writeOriginalCommand ? CurrentLine + ": " + textCommand : "",
 							Result = int.Parse(parameter2),
@@ -235,7 +289,51 @@ namespace ProcessorSimulator
 
 		private bool BuildTwoParameterCommand(string[] commandParameters, string textCommand)
 		{
-			return true;
+			bool successful = true;
+			var function = commandParameters[0];
+			var parameter1 = commandParameters[1];
+			var pcRegister = Registers[(int)RegisterEnums.pc];
+
+			switch (function)
+			{
+				case "branch":
+					{
+						var branch = Branches.Where(p => string.Equals(p.Name, parameter1)).FirstOrDefault();
+
+						if (branch != null)
+						{
+							//var offset = AllOperations[branch.OperationGoToIndex].OpCode - pcRegister;
+
+							var opCode = 67239935 + branch.OperationGoToIndex;
+
+							AllOperations.Add(new Operation()
+							{
+								Address = pcRegister.Value,
+								OpCode = opCode,
+								CodeLine = $"branch 0x{opCode:X8}",
+								OriginalCommand = textCommand,
+								IsBranch = true,
+								DoesBranchExistYet = true,
+								BranchName = parameter1,
+								OpCodeToGoTo = branch.OperationGoToIndex,
+							});
+						}
+						else
+						{
+							AllOperations.Add(new Operation()
+							{
+								Address = pcRegister.Value,
+								OriginalCommand = textCommand,
+								IsBranch = true,
+								BranchName = parameter1,
+							});
+							break;
+						}
+					}
+					break;
+			}
+
+			return successful;
 		}
 
 		private Register GetRegister(string registerName)

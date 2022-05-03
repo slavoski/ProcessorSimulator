@@ -10,13 +10,37 @@
 			set;
 		}
 
+		public string BranchName
+		{
+			get;
+			set;
+		}
+
 		public string CodeLine
 		{
 			get;
 			set;
 		}
 
-		public int OpCode
+		public bool DoesBranchExistYet
+		{
+			get;
+			set;
+		}
+
+		public bool IsBranch
+		{
+			get;
+			set;
+		}
+
+		public long OpCode
+		{
+			get;
+			set;
+		}
+
+		public int OpCodeToGoTo
 		{
 			get;
 			set;
