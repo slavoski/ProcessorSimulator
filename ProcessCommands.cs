@@ -249,6 +249,68 @@ namespace ProcessorSimulator
 					}
 					break;
 
+				case "shiftLeftLogical":
+                   			 {
+						var register1 = int.Parse(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						var loRegister = GetRegister("$lo");
+						var hiRegister = GetRegister("$hi");
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"shiftLeftLogical {register1} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							DestinationRegister = register3,
+							CodeToRun = () =>
+                          				{
+								long result = register2.Value << register1;
+								var lo = (uint)result;
+								int hi = (int)(result >> 32);
+
+								loRegister.Value = (int)lo;
+								hiRegister.Value = hi;
+
+								register3.Value = (int)lo;
+                           				}
+						}) ;
+
+                   			}
+					break;
+
+				case "shiftRightLogical":
+                   			 {
+						var register1 = int.Parse(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						var loRegister = GetRegister("$lo");
+						var hiRegister = GetRegister("$hi");
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"shiftRightLogical {register1} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							DestinationRegister = register3,
+							CodeToRun = () =>
+							{
+								long result = register2.Value >> register1;
+								var lo = (uint)result;
+								int hi = (int)(result >> 32);
+
+								loRegister.Value = (int)lo;
+								hiRegister.Value = hi;
+
+								register3.Value = (int)lo;
+							}
+						});
+					}
+					break;
+
+
 				default:
 					{
 						SnackBoxMessage.Enqueue($"Command ' {function} ' does not exist , Exiting Run");
