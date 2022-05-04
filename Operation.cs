@@ -34,7 +34,7 @@
 			set;
 		}
 
-		public long OpCode
+		public uint OpCode
 		{
 			get;
 			set;

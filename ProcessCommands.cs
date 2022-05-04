@@ -39,6 +39,13 @@ namespace ProcessorSimulator
 			set;
 		}
 
+		Dictionary<string, uint> FuncOpCode = new Dictionary<string, uint>(){
+			{ "add", 32 },
+			{ "addi", 32 },
+			{ "subtract", 34 },
+			{ "loadImmediate", 536870912 } // loadImmediate = addi
+		};
+
 		#endregion Properties
 
 		#region constructor / destructor
@@ -106,7 +113,7 @@ namespace ProcessorSimulator
 
 				if (branch != null)
 				{
-					var opCode = 4294967040 + branch.OperationGoToIndex;
+					uint opCode = (uint)(4294967040 + branch.OperationGoToIndex);
 
 					operation.OpCode = opCode;
 					operation.CodeLine = $"branch 0x{opCode:X8}";
@@ -157,13 +164,14 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
-							register2 = new Register() { Value = register3.Value };
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$lo", parameter2 }, "", false);
+							register2 = GetRegister("$lo");
 						}
 
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"add ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							Result = register1.Value + register2.Value,
@@ -178,9 +186,22 @@ namespace ProcessorSimulator
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
 
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$lo", parameter2 }, "", false);
+							register2 = GetRegister("$lo");
+						}
+
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"subtract ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							Result = register1.Value - register2.Value,
@@ -202,6 +223,7 @@ namespace ProcessorSimulator
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							Result = register1.Value * register2.Value,
 							ResultingRegister = register3.EnumID
+
 						});
 					}
 					break;
@@ -266,6 +288,7 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeIType(function, null, register1, int.Parse(parameter2)),
 							CodeLine = $"loadImmediate ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
 							OriginalCommand = writeOriginalCommand ? CurrentLine + ": " + textCommand : "",
 							Result = int.Parse(parameter2),
@@ -304,7 +327,7 @@ namespace ProcessorSimulator
 						{
 							//var offset = AllOperations[branch.OperationGoToIndex].OpCode - pcRegister;
 
-							var opCode = 67239935 + branch.OperationGoToIndex;
+							uint opCode = (uint)(67239935 + branch.OperationGoToIndex);
 
 							AllOperations.Add(new Operation()
 							{
@@ -345,6 +368,22 @@ namespace ProcessorSimulator
 				SnackBoxMessage.Enqueue($"Register Name ' {registerName} ' does not exist , Exiting Run");
 			}
 			return register;
+		}
+
+		private uint GetOpCodeRType(string function, Register reg1, Register reg2, Register reg3)
+        {
+			// Opcode		rs (source1)		rt (source2)		rd (destination)		shift(0)		function
+			uint opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16) + (uint)(reg3.Number << 11);
+			return opcode;
+		}
+
+		private uint GetOpCodeIType(string function, Register source, Register dest, int val)
+		{
+			// Opcode		rs (source)			rt (destination)	Integer
+			if ((val >> 16) > 0) { SnackBoxMessage.Enqueue($"Integer value ' {val} ' is larger than 16 bits , Exiting Run"); }
+			if (source == null) {source = GetRegister("$zero");}
+			uint opcode = FuncOpCode[function] + (uint)(source.Number << 21) + (uint)(dest.Number << 16) + (uint)(val);
+			return opcode;
 		}
 
 		#endregion methods
