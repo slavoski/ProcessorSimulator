@@ -43,6 +43,8 @@ namespace ProcessorSimulator
 			{ "add", 32 },
 			{ "addi", 32 },
 			{ "subtract", 34 },
+			{ "multiply", 24 },
+			{ "divide", 26 },
 			{ "loadImmediate", 536870912 } // loadImmediate = addi
 		};
 
@@ -164,8 +166,8 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", "$lo", parameter2 }, "", false);
-							register2 = GetRegister("$lo");
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
 						}
 
 						AllOperations.Add(new Operation()
@@ -194,8 +196,8 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", "$lo", parameter2 }, "", false);
-							register2 = GetRegister("$lo");
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
 						}
 
 						AllOperations.Add(new Operation()
@@ -219,9 +221,23 @@ namespace ProcessorSimulator
 						var loRegister = GetRegister("$lo");
 						var hiRegister = GetRegister("$hi");
 
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
+						}
+
+
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"multiply ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							DestinationRegister = register3,
@@ -248,9 +264,22 @@ namespace ProcessorSimulator
 						var loRegister = GetRegister("$lo");
 						var hiRegister = GetRegister("$hi");
 
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
+						}
+
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"divide ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							Result = register1.Value / register2.Value,
@@ -314,7 +343,7 @@ namespace ProcessorSimulator
 						{
 							Address = pcRegister.Value,
 							OpCode = GetOpCodeIType(function, null, register1, int.Parse(parameter2)),
-							CodeLine = $"loadImmediate ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
+							CodeLine = $"addi ${register1.Number} $0 " + string.Format("0x{0}", register1.Value.ToString("X8")),
 							OriginalCommand = writeOriginalCommand ? CurrentLine + ": " + textCommand : "",
 							DestinationRegister = register1,
 							CodeToRun = () => { register1.Value = int.Parse(parameter2); }
@@ -396,9 +425,12 @@ namespace ProcessorSimulator
 		}
 
 		private uint GetOpCodeRType(string function, Register reg1, Register reg2, Register reg3)
-        {
+		{
+			uint opcode;
 			// Opcode		rs (source1)		rt (source2)		rd (destination)		shift(0)		function
-			uint opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16) + (uint)(reg3.Number << 11);
+			if (function == "multiply" || function == "divide") { opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16); }
+            else { opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16) + (uint)(reg3.Number << 11); }
+
 			return opcode;
 		}
 
