@@ -28,7 +28,7 @@ namespace ProcessorSimulator
 		{
 			get;
 			set;
-		}
+		} = () => { };
 
 		public Register DestinationRegister
 		{
@@ -61,12 +61,6 @@ namespace ProcessorSimulator
 		}
 
 		public string OriginalCommand
-		{
-			get;
-			set;
-		}
-
-		public int Result
 		{
 			get;
 			set;
