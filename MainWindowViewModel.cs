@@ -331,7 +331,7 @@ namespace ProcessorSimulator.VM
 		{
 			foreach (var command in AllOperations)
 			{
-				Registers[(int)command.ResultingRegister].Value = command.Result;
+				command.CodeToRun();
 				Registers[(int)RegisterEnums.pc].Value = command.Address;
 			}
 		}
@@ -341,7 +341,6 @@ namespace ProcessorSimulator.VM
 			if (_currentOperation < AllOperations.Count)
 			{
 				var command = AllOperations[_currentOperation];
-				var register = Registers[(int)command.ResultingRegister];
 
 				if (command.IsBranch)
 				{
@@ -352,9 +351,8 @@ namespace ProcessorSimulator.VM
 				}
 				else
 				{
-					register.Value = command.Result;
-					Registers[(int)RegisterEnums.pc].Value = command.Address;
-					RegisterIndex = register.Number;
+					command.CodeToRun();
+					RegisterIndex = command.DestinationRegister.Number;
 					CommandIndex = _currentOperation;
 					++_currentOperation;
 				}

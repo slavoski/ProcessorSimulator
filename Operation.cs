@@ -1,4 +1,6 @@
-﻿namespace ProcessorSimulator
+﻿using System;
+
+namespace ProcessorSimulator
 {
 	public class Operation
 	{
@@ -17,6 +19,18 @@
 		}
 
 		public string CodeLine
+		{
+			get;
+			set;
+		}
+
+		public Action CodeToRun
+		{
+			get;
+			set;
+		}
+
+		public Register DestinationRegister
 		{
 			get;
 			set;
@@ -53,12 +67,6 @@
 		}
 
 		public int Result
-		{
-			get;
-			set;
-		}
-
-		public RegisterEnums ResultingRegister
 		{
 			get;
 			set;
