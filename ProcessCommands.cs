@@ -249,6 +249,122 @@ namespace ProcessorSimulator
 					}
 					break;
 
+				case "or":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"or ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register2.Value | register1.Value; },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "nor":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"nor ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = ~(register2.Value | register1.Value); },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "xor":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"xor ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register2.Value ^ register1.Value; },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "and":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"and ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register2.Value & register1.Value; },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
 				default:
 					{
 						SnackBoxMessage.Enqueue($"Command ' {function} ' does not exist , Exiting Run");
@@ -257,10 +373,14 @@ namespace ProcessorSimulator
 					break;
 			}
 
+
+
 			pcRegister.IncrementPC();
 
 			return successful;
 		}
+
+
 
 		private bool BuildOneParameterCommand(string[] commandParameters, string textCommand)
 		{
