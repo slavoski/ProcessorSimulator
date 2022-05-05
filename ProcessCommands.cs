@@ -64,7 +64,7 @@ namespace ProcessorSimulator
 
 		public bool BuildCommand(string textCommand)
 		{
-			bool successful = true;
+			bool successful;
 			try
 			{
 				CurrentLine++;
@@ -162,12 +162,14 @@ namespace ProcessorSimulator
 						{
 							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
 							register1 = GetRegister("$at");
+							pcRegister.IncrementPC();
 						}
 
 						if (register2 == null)
 						{
 							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
 							register2 = GetRegister("$k0");
+							pcRegister.IncrementPC();
 						}
 
 						AllOperations.Add(new Operation()
@@ -282,7 +284,6 @@ namespace ProcessorSimulator
 							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"divide ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
-							Result = register1.Value / register2.Value,
 							DestinationRegister = register3,
 							CodeToRun = () =>
 							{
@@ -299,6 +300,322 @@ namespace ProcessorSimulator
 					}
 					break;
 
+				case "or":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"or ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register2.Value | register1.Value; },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "nor":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"nor ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = ~(register2.Value | register1.Value); },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "xor":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"xor ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register2.Value ^ register1.Value; },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "and":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						if (register2 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
+							register2 = new Register() { Value = register3.Value };
+						}
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"and ${register1.Number} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register2.Value & register1.Value; },
+							DestinationRegister = register3
+						});
+					}
+					break;
+
+				case "branchIf<":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var at = GetRegister("$at");
+
+						var operation = new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"branchIf< ${register1.Number} ${register2.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							IsBranch = true,
+							DoesBranchExistYet = true,
+							DestinationRegister = at
+						};
+
+						operation.CodeToRun = () =>
+						{
+							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
+							at.Value = (register1.Value < register2.Value) ? 1 : 0;
+
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+						};
+
+						AllOperations.Add(operation);
+					}
+					break;
+
+				case "branchIf>":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var at = GetRegister("$at");
+
+						var operation = new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"branchIf> ${register1.Number} ${register2.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							IsBranch = true,
+							DoesBranchExistYet = true,
+							DestinationRegister = at
+						};
+
+						operation.CodeToRun = () =>
+						{
+							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
+							at.Value = (register1.Value > register2.Value) ? 1 : 0;
+
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+						};
+
+						AllOperations.Add(operation);
+					}
+					break;
+
+				case "branchIf<=":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var at = GetRegister("$at");
+
+						var operation = new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"branchIf<= ${register1.Number} ${register2.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							IsBranch = true,
+							DoesBranchExistYet = true,
+							DestinationRegister = at
+						};
+
+						operation.CodeToRun = () =>
+						{
+							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
+							at.Value = (register1.Value <= register2.Value) ? 1 : 0;
+
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+						};
+
+						AllOperations.Add(operation);
+					}
+					break;
+
+				case "branchIf>=":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var at = GetRegister("$at");
+
+						var operation = new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"branchIf>= ${register1.Number} ${register2.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							IsBranch = true,
+							DoesBranchExistYet = true,
+							DestinationRegister = at
+						};
+
+						operation.CodeToRun = () =>
+						{
+							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
+							at.Value = (register1.Value >= register2.Value) ? 1 : 0;
+
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+						};
+
+						AllOperations.Add(operation);
+					}
+					break;
+
+				case "branchIf==":
+					{
+						var register1 = GetRegister(parameter1);
+						var register2 = GetRegister(parameter2);
+						var at = GetRegister("$at");
+
+						var operation = new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"branchIf>= ${register1.Number} ${register2.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							IsBranch = true,
+							DoesBranchExistYet = true,
+							DestinationRegister = at
+						};
+
+						operation.CodeToRun = () =>
+						{
+							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
+							at.Value = (register1.Value == register2.Value) ? 1 : 0;
+
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+						};
+
+						AllOperations.Add(operation);
+					}
+					break;
+
+				case "shiftLeftLogical":
+					{
+						var register1 = int.Parse(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						var loRegister = GetRegister("$lo");
+						var hiRegister = GetRegister("$hi");
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"shiftLeftLogical {register1} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							DestinationRegister = register3,
+							CodeToRun = () =>
+							{
+								long result = register2.Value << register1;
+								var lo = (uint)result;
+								int hi = (int)(result >> 32);
+
+								loRegister.Value = (int)lo;
+								hiRegister.Value = hi;
+
+								register3.Value = (int)lo;
+							}
+						});
+
+					}
+					break;
+
+				case "shiftRightLogical":
+					{
+						var register1 = int.Parse(parameter1);
+						var register2 = GetRegister(parameter2);
+						var register3 = GetRegister(parameter3);
+
+						var loRegister = GetRegister("$lo");
+						var hiRegister = GetRegister("$hi");
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							CodeLine = $"shiftRightLogical {register1} ${register2.Number} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							DestinationRegister = register3,
+							CodeToRun = () =>
+							{
+								long result = register2.Value >> register1;
+								var lo = (uint)result;
+								int hi = (int)(result >> 32);
+
+								loRegister.Value = (int)lo;
+								hiRegister.Value = hi;
+
+								register3.Value = (int)lo;
+							}
+						});
+					}
+					break;
 				default:
 					{
 						SnackBoxMessage.Enqueue($"Command ' {function} ' does not exist , Exiting Run");
@@ -388,7 +705,7 @@ namespace ProcessorSimulator
 								Address = pcRegister.Value,
 								OpCode = opCode,
 								CodeLine = $"branch 0x{opCode:X8}",
-								OriginalCommand = textCommand,
+								OriginalCommand = CurrentLine + ": " + textCommand,
 								IsBranch = true,
 								DoesBranchExistYet = true,
 								BranchName = parameter1,
@@ -409,6 +726,8 @@ namespace ProcessorSimulator
 					}
 					break;
 			}
+
+			pcRegister.IncrementPC();
 
 			return successful;
 		}

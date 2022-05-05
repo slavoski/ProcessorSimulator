@@ -329,34 +329,36 @@ namespace ProcessorSimulator.VM
 
 		private void RunCode()
 		{
-			foreach (var command in AllOperations)
+			while (_currentOperation < AllOperations.Count)
 			{
-				command.CodeToRun();
-				Registers[(int)RegisterEnums.pc].Value = command.Address;
+				RunCodeStep();
 			}
+
+			CommandIndex = -1;
+			RegisterIndex = -1;
 		}
 
 		private void RunCodeOneStep()
 		{
 			if (_currentOperation < AllOperations.Count)
 			{
-				var command = AllOperations[_currentOperation];
-
-				if (command.IsBranch)
-				{
-					Registers[(int)RegisterEnums.pc].Value = AllOperations[command.OpCodeToGoTo].Address;
-					RegisterIndex = -1;
-					CommandIndex = _currentOperation;
-					_currentOperation = command.OpCodeToGoTo;
-				}
-				else
-				{
-					command.CodeToRun();
-					RegisterIndex = command.DestinationRegister.Number;
-					CommandIndex = _currentOperation;
-					++_currentOperation;
-				}
+				RunCodeStep();
 			}
+			else
+			{
+				CommandIndex = -1;
+				RegisterIndex = -1;
+			}
+		}
+
+		private void RunCodeStep()
+		{
+			var command = AllOperations[_currentOperation];
+			Registers[(int)RegisterEnums.pc].Value = command.IsBranch ? AllOperations[command.OpCodeToGoTo].Address : command.Address;
+			RegisterIndex = command.IsBranch && command.DestinationRegister == null ? -1 : command.DestinationRegister.Number;
+			command.CodeToRun();
+			CommandIndex = _currentOperation;
+			_currentOperation = command.IsBranch ? command.OpCodeToGoTo : _currentOperation + 1;
 		}
 
 		private void SaveFile()

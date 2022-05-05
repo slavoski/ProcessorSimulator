@@ -48,7 +48,6 @@
 				<Grid>
 					<Grid.RowDefinitions>
 						<RowDefinition />
-						<RowDefinition />
 					</Grid.RowDefinitions>
 					<DataGrid ItemsSource="{Binding AllOperations}" SelectedIndex="{Binding CommandIndex}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
 						<DataGrid.Columns>
