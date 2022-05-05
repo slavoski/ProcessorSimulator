@@ -392,10 +392,17 @@ namespace ProcessorSimulator.VM
 		private void RunCodeStep()
 		{
 			var command = AllOperations[_currentOperation];
+			CommandIndex = _currentOperation;
+
+			if (command.IsBranch && command.OpCodeToGoTo >= AllOperations.Count)
+			{
+				_currentOperation = AllOperations.Count;
+				return;
+			}
+
 			Registers[(int)RegisterEnums.pc].Value = command.IsBranch ? AllOperations[command.OpCodeToGoTo].Address : command.Address;
 			RegisterIndex = command.IsBranch && command.DestinationRegister == null ? -1 : command.DestinationRegister.Number;
 			command.CodeToRun();
-			CommandIndex = _currentOperation;
 			_currentOperation = command.IsBranch ? command.OpCodeToGoTo : _currentOperation + 1;
 		}
 

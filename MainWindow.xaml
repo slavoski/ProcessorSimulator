@@ -49,7 +49,7 @@
 					<Grid.RowDefinitions>
 						<RowDefinition />
 					</Grid.RowDefinitions>
-					<DataGrid ItemsSource="{Binding AllOperations}" SelectedIndex="{Binding CommandIndex}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
+					<DataGrid x:Name="_operations" ItemsSource="{Binding AllOperations}" SelectedIndex="{Binding CommandIndex}" SelectionChanged="DataGrid_SelectionChanged"	 AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
 							<DataGridTextColumn Header="Op Code" Binding="{Binding OpCode, StringFormat={}0x{0:X8}}" IsReadOnly="True" MinWidth="80" />
@@ -73,7 +73,7 @@
 						<RowDefinition />
 					</Grid.RowDefinitions>
 					<TextBox x:Name="_SearchBox" TextChanged="_SearchBox_TextChanged" materialDesign:HintAssist.Hint="Search Commands" HorizontalAlignment="Right" Width="220" Height="48" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" />
-					<Separator Grid.Row="1" Style="{DynamicResource MaterialDesignLightSeparator}" Margin="0,10,0,10"/>
+					<Separator Grid.Row="1" Style="{DynamicResource MaterialDesignLightSeparator}" Margin="0,10,0,10" />
 					<DataGrid x:Name="_CommandsDataGrid" Grid.Row="2" ItemsSource="{Binding CommandDescriptions}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" CanUserResizeColumns="False">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" />
@@ -95,7 +95,7 @@
 		</TabControl>
 
 		<GroupBox Grid.Row="1" Grid.Column="2" Header="Registers" Margin="10">
-			<DataGrid SelectedIndex="{Binding RegisterIndex}" ItemsSource="{Binding Registers}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
+			<DataGrid x:Name="_Registers" SelectedIndex="{Binding RegisterIndex}" SelectionChanged="_Registers_SelectionChanged" ItemsSource="{Binding Registers}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow">
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" MinWidth="80" />
 					<DataGridTextColumn Header="Number" Binding="{Binding Number}" IsReadOnly="True" MinWidth="60">
