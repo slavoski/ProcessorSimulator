@@ -9,6 +9,26 @@ namespace ProcessorSimulator
 	{
 		#region Properties
 
+		private Dictionary<string, uint> FuncOpCode = new Dictionary<string, uint>(){
+			{ "add", 32 },
+			{ "addi", 536870912 },
+			{ "subtract", 34 },
+			{ "multiply", 24 },
+			{ "divide", 26 },
+			{ "loadImmediate", 536870912 },
+			{ "or", 37 },
+			{ "xor", 38 },
+			{ "nor", 39 },
+			{ "and", 36 },
+			{ "shiftLeftLogical", 0 },
+			{ "shiftRightLogical", 2 },
+			{ "branchIf<", 42 },
+			{ "branchIf>", 42 },
+			{ "branchIf<=", 42 },
+			{ "branchIf>=", 42 },
+			{ "branchIf==", 4 },
+		};
+
 		public ObservableRangeCollection<Operation> AllOperations
 		{
 			get;
@@ -38,15 +58,6 @@ namespace ProcessorSimulator
 			get;
 			set;
 		}
-
-		Dictionary<string, uint> FuncOpCode = new Dictionary<string, uint>(){
-			{ "add", 32 },
-			{ "addi", 32 },
-			{ "subtract", 34 },
-			{ "multiply", 24 },
-			{ "divide", 26 },
-			{ "loadImmediate", 536870912 } // loadImmediate = addi
-		};
 
 		#endregion Properties
 
@@ -152,24 +163,14 @@ namespace ProcessorSimulator
 			switch (function)
 			{
 				case "add":
-				case "addi":
 					{
 						var register1 = GetRegister(parameter1);
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
 
-						if (register1 == null)
+						if (register1 == null || register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter1 }, "", false);
-							register1 = GetRegister("$at");
-							pcRegister.IncrementPC();
-						}
-
-						if (register2 == null)
-						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
-							register2 = GetRegister("$k0");
-							pcRegister.IncrementPC();
+							break;
 						}
 
 						AllOperations.Add(new Operation()
@@ -181,6 +182,41 @@ namespace ProcessorSimulator
 							CodeToRun = () => { register3.Value = register2.Value + register1.Value; },
 							DestinationRegister = register3
 						});
+					}
+					break;
+
+				case "addi":
+					{
+						var register1 = GetRegister(parameter1);
+						int valueToAdd = 0;
+
+						if (register1 == null)
+						{
+							register1 = GetRegister(parameter2);
+							valueToAdd = int.Parse(parameter1);
+						}
+						else
+						{
+							valueToAdd = int.Parse(parameter2);
+						}
+
+						if (register1 == null)
+						{
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$at", parameter2 }, "", false);
+							register1 = GetRegister("$at");
+						}
+
+						var register3 = GetRegister(parameter3);
+
+						AllOperations.Add(new Operation()
+						{
+							Address = pcRegister.Value,
+							OpCode = GetOpCodeIType(function, register1, register3, valueToAdd),
+							CodeLine = $"addi ${register1.Number} {valueToAdd} ${register3.Number}",
+							OriginalCommand = CurrentLine + ": " + textCommand,
+							CodeToRun = () => { register3.Value = register1.Value + valueToAdd; },
+							DestinationRegister = register3
+						}); ;
 					}
 					break;
 
@@ -235,7 +271,6 @@ namespace ProcessorSimulator
 							register2 = GetRegister("$k0");
 						}
 
-
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
@@ -287,14 +322,21 @@ namespace ProcessorSimulator
 							DestinationRegister = register3,
 							CodeToRun = () =>
 							{
-								long result = (long)register1.Value / (long)register2.Value;
-								var lo = (uint)result;
-								int hi = (int)(result >> 32);
+								if (register2.Value != 0)
+								{
+									long result = (long)register1.Value / (long)register2.Value;
+									var lo = (uint)result;
+									int hi = (int)(result >> 32);
 
-								loRegister.Value = (int)lo;
-								hiRegister.Value = hi;
+									loRegister.Value = (int)lo;
+									hiRegister.Value = hi;
 
-								register3.Value = (int)lo;
+									register3.Value = (int)lo;
+								}
+								else
+								{
+									SnackBoxMessage.Enqueue($"Cannot Divide By Zero!");
+								}
 							}
 						});
 					}
@@ -321,6 +363,7 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"or ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							CodeToRun = () => { register3.Value = register2.Value | register1.Value; },
@@ -350,6 +393,7 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"nor ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							CodeToRun = () => { register3.Value = ~(register2.Value | register1.Value); },
@@ -379,6 +423,7 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"xor ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							CodeToRun = () => { register3.Value = register2.Value ^ register1.Value; },
@@ -408,6 +453,7 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, register3),
 							CodeLine = $"and ${register1.Number} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							CodeToRun = () => { register3.Value = register2.Value & register1.Value; },
@@ -425,6 +471,7 @@ namespace ProcessorSimulator
 						var operation = new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, at),
 							CodeLine = $"branchIf< ${register1.Number} ${register2.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							IsBranch = true,
@@ -453,6 +500,7 @@ namespace ProcessorSimulator
 						var operation = new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, at),
 							CodeLine = $"branchIf> ${register1.Number} ${register2.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							IsBranch = true,
@@ -481,6 +529,7 @@ namespace ProcessorSimulator
 						var operation = new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, at),
 							CodeLine = $"branchIf<= ${register1.Number} ${register2.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							IsBranch = true,
@@ -509,6 +558,7 @@ namespace ProcessorSimulator
 						var operation = new Operation()
 						{
 							Address = pcRegister.Value,
+							OpCode = GetOpCodeRType(function, register1, register2, at),
 							CodeLine = $"branchIf>= ${register1.Number} ${register2.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							IsBranch = true,
@@ -537,19 +587,29 @@ namespace ProcessorSimulator
 						var operation = new Operation()
 						{
 							Address = pcRegister.Value,
-							CodeLine = $"branchIf>= ${register1.Number} ${register2.Number}",
+							CodeLine = $"branchIf== ${register1.Number} ${register2.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							IsBranch = true,
 							DoesBranchExistYet = true,
-							DestinationRegister = at
+							DestinationRegister = at,
 						};
+
+						var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
+						if (branch != null)
+						{
+							operation.OpCode = GetOpCodeIType(function, register1, register2, AllOperations[at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4)].Address << 16 >> 16);
+						}
+						else
+						{
+							operation.OpCode = GetOpCodeIType(function, register1, register2, operation.Address << 16 >> 16);
+						}
 
 						operation.CodeToRun = () =>
 						{
 							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
 							at.Value = (register1.Value == register2.Value) ? 1 : 0;
 
-							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194300) / 4);
 						};
 
 						AllOperations.Add(operation);
@@ -558,7 +618,7 @@ namespace ProcessorSimulator
 
 				case "shiftLeftLogical":
 					{
-						var register1 = int.Parse(parameter1);
+						var shiftAmount = int.Parse(parameter1);
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
 
@@ -568,12 +628,13 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
-							CodeLine = $"shiftLeftLogical {register1} ${register2.Number} ${register3.Number}",
+							OpCode = GetOpCodeRType(function, null, register2, register3, shiftAmount),
+							CodeLine = $"shiftLeftLogical {shiftAmount} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							DestinationRegister = register3,
 							CodeToRun = () =>
 							{
-								long result = register2.Value << register1;
+								long result = register2.Value << shiftAmount;
 								var lo = (uint)result;
 								int hi = (int)(result >> 32);
 
@@ -583,13 +644,12 @@ namespace ProcessorSimulator
 								register3.Value = (int)lo;
 							}
 						});
-
 					}
 					break;
 
 				case "shiftRightLogical":
 					{
-						var register1 = int.Parse(parameter1);
+						var shiftAmount = int.Parse(parameter1);
 						var register2 = GetRegister(parameter2);
 						var register3 = GetRegister(parameter3);
 
@@ -599,12 +659,13 @@ namespace ProcessorSimulator
 						AllOperations.Add(new Operation()
 						{
 							Address = pcRegister.Value,
-							CodeLine = $"shiftRightLogical {register1} ${register2.Number} ${register3.Number}",
+							OpCode = GetOpCodeRType(function, null, register2, register3, shiftAmount),
+							CodeLine = $"shiftRightLogical {shiftAmount} ${register2.Number} ${register3.Number}",
 							OriginalCommand = CurrentLine + ": " + textCommand,
 							DestinationRegister = register3,
 							CodeToRun = () =>
 							{
-								long result = register2.Value >> register1;
+								long result = register2.Value >> shiftAmount;
 								var lo = (uint)result;
 								int hi = (int)(result >> 32);
 
@@ -616,6 +677,7 @@ namespace ProcessorSimulator
 						});
 					}
 					break;
+
 				default:
 					{
 						SnackBoxMessage.Enqueue($"Command ' {function} ' does not exist , Exiting Run");
@@ -638,6 +700,7 @@ namespace ProcessorSimulator
 			{
 				Branches.Add(new BranchInfo() { Name = function[0..^1], OperationGoToIndex = AllOperations.Count });
 			}
+			--CurrentLine;
 
 			return successful;
 		}
@@ -696,8 +759,6 @@ namespace ProcessorSimulator
 
 						if (branch != null)
 						{
-							//var offset = AllOperations[branch.OperationGoToIndex].OpCode - branch;
-
 							uint opCode = (uint)(67239935 + branch.OperationGoToIndex);
 
 							AllOperations.Add(new Operation()
@@ -717,7 +778,7 @@ namespace ProcessorSimulator
 							AllOperations.Add(new Operation()
 							{
 								Address = pcRegister.Value,
-								OriginalCommand = textCommand,
+								OriginalCommand = CurrentLine + ": " + textCommand,
 								IsBranch = true,
 								BranchName = parameter1,
 							});
@@ -732,6 +793,40 @@ namespace ProcessorSimulator
 			return successful;
 		}
 
+		private uint GetOpCodeIType(string function, Register source, Register dest, int val)
+		{
+			// Opcode		rs (source)			rt (destination)	Integer
+			if ((val >> 16) > 0) { SnackBoxMessage.Enqueue($"Integer value ' {val} ' is larger than 16 bits , Exiting Run"); }
+			if (source == null) { source = GetRegister("$zero"); }
+			uint opcode = FuncOpCode[function] + (uint)(source.Number << 21) + (uint)(dest.Number << 16) + (uint)(val);
+			return opcode;
+		}
+
+		private uint GetOpCodeRType(string function, Register reg1 = null, Register reg2 = null, Register reg3 = null, int shiftAmount = 0)
+		{
+			uint opcode = 0;
+			// Opcode		rs (source1)		rt (source2)		rd (destination)		shift(0)		function
+
+			switch (function)
+			{
+				case "multiply":
+				case "divide":
+					opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16);
+					break;
+
+				case "shiftLeftLogical":
+				case "shiftRightLogical":
+					opcode = FuncOpCode[function] + (uint)(reg2.Number << 16) + (uint)(reg3.Number << 11) + (uint)(shiftAmount << 6);
+					break;
+
+				default:
+					opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16) + (uint)(reg3.Number << 11);
+					break;
+			}
+
+			return opcode;
+		}
+
 		private Register GetRegister(string registerName)
 		{
 			var register = Registers.Where(p => string.Compare(p.Name, registerName) == 0).FirstOrDefault();
@@ -741,25 +836,6 @@ namespace ProcessorSimulator
 				SnackBoxMessage.Enqueue($"Register Name ' {registerName} ' does not exist , Exiting Run");
 			}
 			return register;
-		}
-
-		private uint GetOpCodeRType(string function, Register reg1, Register reg2, Register reg3)
-		{
-			uint opcode;
-			// Opcode		rs (source1)		rt (source2)		rd (destination)		shift(0)		function
-			if (function == "multiply" || function == "divide") { opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16); }
-            else { opcode = FuncOpCode[function] + (uint)(reg1.Number << 21) + (uint)(reg2.Number << 16) + (uint)(reg3.Number << 11); }
-
-			return opcode;
-		}
-
-		private uint GetOpCodeIType(string function, Register source, Register dest, int val)
-		{
-			// Opcode		rs (source)			rt (destination)	Integer
-			if ((val >> 16) > 0) { SnackBoxMessage.Enqueue($"Integer value ' {val} ' is larger than 16 bits , Exiting Run"); }
-			if (source == null) {source = GetRegister("$zero");}
-			uint opcode = FuncOpCode[function] + (uint)(source.Number << 21) + (uint)(dest.Number << 16) + (uint)(val);
-			return opcode;
 		}
 
 		#endregion methods
