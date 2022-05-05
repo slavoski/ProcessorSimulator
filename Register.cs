@@ -38,6 +38,12 @@ namespace ProcessorSimulator
 			set;
 		}
 
+		public Visibility ShowRegisterNumber
+		{
+			get;
+			set;
+		}
+
 		public int Value
 		{
 			get => _value;

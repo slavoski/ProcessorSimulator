@@ -215,6 +215,8 @@ namespace ProcessorSimulator.VM
 				File.WriteAllText(sfd.FileName, "");
 				OpenFileWithPath(sfd.FileName, sfd.SafeFileName);
 			}
+
+			TabIndex = 0;
 		}
 
 		private void InitializeCommands()
@@ -264,9 +266,9 @@ namespace ProcessorSimulator.VM
 				new Register() { Name="$sp", Number=29, EnumID=RegisterEnums.sp},
 				new Register() { Name="$fp", Number=30, EnumID=RegisterEnums.fp},
 				new Register() { Name="$ra", Number=31, EnumID=RegisterEnums.ra},
-				new Register() { Name="$pc", Number=32, EnumID=RegisterEnums.pc, ShowDecimalValue=Visibility.Collapsed, Value=4194304 },
-				new Register() { Name="$hi", Number=33, EnumID=RegisterEnums.hi},
-				new Register() { Name="$lo", Number=34, EnumID=RegisterEnums.lo},
+				new Register() { Name="$pc", Number=32, EnumID=RegisterEnums.pc, ShowDecimalValue=Visibility.Collapsed, ShowRegisterNumber = Visibility.Collapsed, Value=4194304 },
+				new Register() { Name="$hi", Number=33, EnumID=RegisterEnums.hi, ShowRegisterNumber = Visibility.Collapsed},
+				new Register() { Name="$lo", Number=34, EnumID=RegisterEnums.lo, ShowRegisterNumber = Visibility.Collapsed},
 			};
 		}
 
@@ -295,6 +297,7 @@ namespace ProcessorSimulator.VM
 			streamReader.Close();
 			Clear();
 			IsFileParsed = false;
+			TabIndex = 0;
 		}
 
 		private void ParseAllCommands()
@@ -329,6 +332,7 @@ namespace ProcessorSimulator.VM
 
 		private void RunCode()
 		{
+			TabIndex = 1;
 			while (_currentOperation < AllOperations.Count)
 			{
 				RunCodeStep();
@@ -340,6 +344,7 @@ namespace ProcessorSimulator.VM
 
 		private void RunCodeOneStep()
 		{
+			TabIndex = 1;
 			if (_currentOperation < AllOperations.Count)
 			{
 				RunCodeStep();

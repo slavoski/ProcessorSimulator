@@ -74,7 +74,7 @@
 					<DataGridTextColumn Header="Number" Binding="{Binding Number}" IsReadOnly="True" MinWidth="60">
 						<DataGridTextColumn.ElementStyle>
 							<Style TargetType="TextBlock">
-								<Setter Property="Visibility" Value="{Binding ShowDecimalValue}" />
+								<Setter Property="Visibility" Value="{Binding ShowRegisterNumber}" />
 							</Style>
 						</DataGridTextColumn.ElementStyle>
 					</DataGridTextColumn>
