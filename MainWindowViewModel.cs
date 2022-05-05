@@ -41,7 +41,13 @@ namespace ProcessorSimulator.VM
 		{
 			get;
 			set;
-		} = new ObservableRangeCollection<Operation>();
+		}
+
+		public ObservableRangeCollection<CommandDescription> CommandDescriptions
+		{
+			get;
+			set;
+		} = new ObservableRangeCollection<CommandDescription>();
 
 		public int CommandIndex
 		{
@@ -179,11 +185,39 @@ namespace ProcessorSimulator.VM
 		{
 			InitializeRegisters();
 			InitializeCommands();
+			InitializeCommandDescriptions();
 		}
 
 		#endregion constructor / destructor
 
 		#region methods
+
+		public void InitializeCommandDescriptions()
+		{
+			CommandDescriptions = new ObservableRangeCollection<CommandDescription>()
+			{
+				new CommandDescription() { Name="add", Example="add $t1 $t2 $t1", Parameter1="Source Register", Parameter2="Source Register", Parameter3="Destination Register", Description="Add two registers together and output to destination register" },
+				new CommandDescription() { Name="addi", Example="add $t1 20 $t1 or add 20 10 $t1", Parameter1="Source Register/Immediate", Parameter2="Source Register/Immediate", Parameter3="Destination Register", Description="Add two registers/immediates together and output to destination register" },
+				new CommandDescription() { Name="subtract", Example="subtract $t1 2 $t1 or subtract 20 10 $t1", Parameter1="Source Register/Immediate Minuend", Parameter2="Source Register/Immediate Subtrahend", Parameter3="Destination Register", Description="Subtract two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="multiply", Example="multiply $t1 2 $t1 or multiply 20 10 $t1", Parameter1="Source Register/Immediate", Parameter2="Source Register/Immediate", Parameter3="Destination Register", Description="Multiply two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="divide", Example="divide $t1 2 $t1 or divide 20 10 $t1", Parameter1="Source Register/Immediate Dividend", Parameter2="Source Register/Immediate Divisor", Parameter3="Destination Register", Description="Divide two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="or", Example="or $t1 2 $t1 or or 20 10 $t1", Parameter1="Source Register/Immediate", Parameter2="Source Register/Immediate", Parameter3="Destination Register", Description="Bitwise or two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="nor", Example="nor $t1 2 $t1 or nor 20 10 $t1", Parameter1="Source Register/Immediate", Parameter2="Source Register/Immediate", Parameter3="Destination Register", Description="Bitwise nor two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="xor", Example="xor $t1 2 $t1 or xor 20 10 $t1", Parameter1="Source Register/Immediate", Parameter2="Source Register/Immediate", Parameter3="Destination Register", Description="Bitwise xor two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="and", Example="and $t1 2 $t1 or and 20 10 $t1", Parameter1="Source Register/Immediate", Parameter2="Source Register/Immediate", Parameter3="Destination Register", Description="Bitwise and two registers/immediates and output to destination register" },
+				new CommandDescription() { Name="branchIf<", Example="branchIf< $t1 2 $t1", Parameter1="Left Source Register", Parameter2="Right Source Register", Parameter3="Destination Register", Description="Compare two registers and branch if the left register is less than the right register" },
+				new CommandDescription() { Name="branchIf>", Example="branchIf> $t1 2 $t1", Parameter1="Left Source Register", Parameter2="Right Source Register", Parameter3="Destination Register", Description="Compare two registers and branch if the left register is greater than the right register" },
+				new CommandDescription() { Name="branchIf<=", Example="branchIf<= $t1 2 $t1", Parameter1="Left Source Register", Parameter2="Right Source Register", Parameter3="Destination Register", Description="Compare two registers and branch if the left register is less than or equal to the right register" },
+				new CommandDescription() { Name="branchIf>=", Example="branchIf>= $t1 2 $t1", Parameter1="Left Source Register", Parameter2="Right Source Register", Parameter3="Destination Register", Description="Compare two registers and branch if the left register is greater than or equal to the right register" },
+				new CommandDescription() { Name="branchIf==", Example="branchIf== $t1 2 $t1", Parameter1="Left Source Register", Parameter2="Right Source Register", Parameter3="Destination Register", Description="Compare two registers and branch if the left register is equal to the right register" },
+				new CommandDescription() { Name="shiftLeftLogical", Example="shiftLeftLogical 2 $t1 $t2", Parameter1="Immediate Shift Amount", Parameter2="Source Register", Parameter3="Destination Register", Description="Shift the Source Register Left by the Amount indicated and store in the destination register " },
+				new CommandDescription() { Name="shiftRightLogical", Example="shiftRightLogical 2 $t1 $t2", Parameter1="Immediate Shift Amount", Parameter2="Source Register", Parameter3="Destination Register", Description="Shift the Source Register Right by the Amount indicated and store in the destination register " },
+				new CommandDescription() { Name="loadImmediate", Example="loadImmediate $t1 2", Parameter1="Destination Register", Parameter2="Immediate", Description="Load the immediate in the destination register" },
+				new CommandDescription() { Name="branch", Example="branch <BranchName>", Parameter1="String of the Branch Name", Description="Go to the indicated Branch" },
+				new CommandDescription() { Name="<BranchName>;", Example="<BranchName>;", Parameter1="String of the Branch Name", Description="Create a branch with the passed in name. Note must end with ;" },
+
+			};
+		}
 
 		private void Clear()
 		{

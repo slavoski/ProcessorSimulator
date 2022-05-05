@@ -82,11 +82,7 @@ namespace ProcessorSimulator
 
 				var breakOnSpaces = textCommand.Split(" ");
 
-				if (breakOnSpaces.Length >= 5)
-				{
-					successful = BuildFiveParameterCommand(breakOnSpaces, textCommand);
-				}
-				else if (breakOnSpaces.Length == 4)
+				if (breakOnSpaces.Length == 4)
 				{
 					successful = BuildFourParameterCommand(breakOnSpaces, textCommand);
 				}
@@ -144,11 +140,6 @@ namespace ProcessorSimulator
 		internal void Clear()
 		{
 			Branches.Clear();
-		}
-
-		private bool BuildFiveParameterCommand(string[] commandParameters, string textCommand)
-		{
-			return true;
 		}
 
 		private bool BuildFourParameterCommand(string[] commandParameters, string textCommand, bool writeOriginalCommand = true)
@@ -356,8 +347,8 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
-							register2 = new Register() { Value = register3.Value };
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
 						}
 
 						AllOperations.Add(new Operation()
@@ -386,8 +377,8 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
-							register2 = new Register() { Value = register3.Value };
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
 						}
 
 						AllOperations.Add(new Operation()
@@ -416,8 +407,8 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
-							register2 = new Register() { Value = register3.Value };
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
 						}
 
 						AllOperations.Add(new Operation()
@@ -446,8 +437,8 @@ namespace ProcessorSimulator
 
 						if (register2 == null)
 						{
-							BuildThreeParameterCommand(new string[] { "loadImmediate", parameter3, parameter2 }, "", false);
-							register2 = new Register() { Value = register3.Value };
+							BuildThreeParameterCommand(new string[] { "loadImmediate", "$k0", parameter2 }, "", false);
+							register2 = GetRegister("$k0");
 						}
 
 						AllOperations.Add(new Operation()

@@ -65,6 +65,33 @@
 					</DataGrid>
 				</Grid>
 			</TabItem>
+			<TabItem Header="Commands">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition />
+					</Grid.RowDefinitions>
+					<TextBox x:Name="_SearchBox" TextChanged="_SearchBox_TextChanged" materialDesign:HintAssist.Hint="Search Commands" HorizontalAlignment="Right" Width="220" Height="48" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" />
+					<Separator Grid.Row="1" Style="{DynamicResource MaterialDesignLightSeparator}" Margin="0,10,0,10"/>
+					<DataGrid x:Name="_CommandsDataGrid" Grid.Row="2" ItemsSource="{Binding CommandDescriptions}" AutoGenerateColumns="False" CanUserReorderColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" CanUserResizeColumns="False">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" />
+							<DataGridTextColumn Header="Example" Binding="{Binding Example}" IsReadOnly="True" />
+							<DataGridTextColumn Header="Parameter 1" Binding="{Binding Parameter1}" IsReadOnly="True" />
+							<DataGridTextColumn Header="Parameter 2" Binding="{Binding Parameter2}" IsReadOnly="True" />
+							<DataGridTextColumn Header="Parameter 3" Binding="{Binding Parameter3}" IsReadOnly="True" />
+							<DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" />
+						</DataGrid.Columns>
+
+						<DataGrid.CellStyle>
+							<Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+								<Setter Property="BorderThickness" Value="0" />
+							</Style>
+						</DataGrid.CellStyle>
+					</DataGrid>
+				</Grid>
+			</TabItem>
 		</TabControl>
 
 		<GroupBox Grid.Row="1" Grid.Column="2" Header="Registers" Margin="10">

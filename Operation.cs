@@ -1,8 +1,9 @@
-﻿using System;
+﻿using MvvmHelpers;
+using System;
 
 namespace ProcessorSimulator
 {
-	public class Operation
+	public class Operation : BaseViewModel
 	{
 		#region properties
 
