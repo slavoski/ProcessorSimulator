@@ -475,7 +475,7 @@ namespace ProcessorSimulator
 							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
 							at.Value = (register1.Value < register2.Value) ? 1 : 0;
 
-							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4) + 1;
 						};
 
 						AllOperations.Add(operation);
@@ -504,7 +504,7 @@ namespace ProcessorSimulator
 							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
 							at.Value = (register1.Value > register2.Value) ? 1 : 0;
 
-							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4) + 1;
 						};
 
 						AllOperations.Add(operation);
@@ -533,7 +533,7 @@ namespace ProcessorSimulator
 							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
 							at.Value = (register1.Value <= register2.Value) ? 1 : 0;
 
-							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4) + 1;
 						};
 
 						AllOperations.Add(operation);
@@ -562,7 +562,7 @@ namespace ProcessorSimulator
 							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
 							at.Value = (register1.Value >= register2.Value) ? 1 : 0;
 
-							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4);
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4) + 1;
 						};
 
 						AllOperations.Add(operation);
@@ -600,7 +600,7 @@ namespace ProcessorSimulator
 							var branch = Branches.Where(p => string.Equals(p.Name, parameter3)).FirstOrDefault();
 							at.Value = (register1.Value == register2.Value) ? 1 : 0;
 
-							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194300) / 4);
+							operation.OpCodeToGoTo = at.Value == 1 ? branch.OperationGoToIndex : ((operation.Address - 4194304) / 4) + 1;
 						};
 
 						AllOperations.Add(operation);
