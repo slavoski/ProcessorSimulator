@@ -1,0 +1,24 @@
+loadImmediate $t0 0
+loadImmediate $t1 2
+loadImmediate $t2 8
+
+divide $t2 $t1 $t3
+multiply $t2 $t1 $t4
+
+shiftLeftLogical 1 $t2 $t5
+shiftRightLogical 1 $t2 $t6
+
+or 4 $t1 $t6
+nor 4 $t1 $t7
+xor 4 $t1 $s0
+and 4 $t1 $s1
+
+add $t5 $t7 $s2
+addi 32 8 $s3
+subtract $t4 $t7 $s4
+
+branch end
+
+loadImmediate $s5 888
+
+end;

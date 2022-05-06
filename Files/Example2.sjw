@@ -1,0 +1,29 @@
+loadImmediate $t1 1
+loadImmediate $t2 22
+loadImmediate $t5 50
+add $t1 $t2 $t3
+addi 10 $t2 $t4
+addi $t2 24 $t6
+addi 20 20 $t7
+
+test1;
+
+subtract $t5 $t1 $t5
+
+branch test2
+
+loadImmediate $t1 888
+
+test2;
+
+add $t6 $t1 $t6
+multiply $t2 $t6 $t7
+
+branchIf== $t2 $t5 end
+
+branch test1
+
+end;
+
+add $t6 $t1 $t6
+
